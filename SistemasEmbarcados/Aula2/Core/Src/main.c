@@ -57,7 +57,19 @@ void SystemClock_Config(void);
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
+typedef enum {
+  piscar,
+  atualizar
+} Estado;
 
+typedef struct {
+  int freqPiscadasPorMinuto;
+  int freqPiscadasPorMinutoMin;
+  int freqPiscadasPorMinutoMax;
+  int intervaloPiscadasPorMinuto;
+
+  int intervaloEntrePiscadas;
+} Contexto;
 /* USER CODE END 0 */
 
 /**
@@ -70,8 +82,6 @@ int main(void)
   /* USER CODE BEGIN 1 */
 
   /* USER CODE END 1 */
-
-  /* MCU Configuration--------------------------------------------------------*/
 
   /* Reset of all peripherals, Initializes the Flash interface and the Systick. */
   HAL_Init();
@@ -91,6 +101,14 @@ int main(void)
   MX_GPIO_Init();
   MX_USART2_UART_Init();
   /* USER CODE BEGIN 2 */
+  Estado estado = atualizar;
+  Contexto ctx = {
+    60,
+    30,
+    15,
+  };
+
+  Estado atualizarContexto(Contexto *ctx);
 
   /* USER CODE END 2 */
 
@@ -99,6 +117,15 @@ int main(void)
   while (1)
   {
     /* USER CODE END WHILE */
+    switch (estado) {
+    case atualizar: {
+      estado = atualizarContexto(&ctx);
+    }
+    case piscar: {
+
+    }
+    }
+
     HAL_GPIO_TogglePin(LD2_GPIO_Port, LD2_Pin);
     HAL_Delay(1000);
 
@@ -146,6 +173,22 @@ void SystemClock_Config(void)
 }
 
 /* USER CODE BEGIN 4 */
+Estado atualizarContexto(Contexto *ctx) {
+  if (ctx->freqPiscadasPorMinuto == ctx->freqPiscadasPorMinutoMax) {
+    ctx->freqPiscadasPorMinuto = ctx->freqPiscadasPorMinutoMin;
+  } else {
+    ctx->freqPiscadasPorMinuto = ctx->freqPiscadasPorMinuto + ctx->intervaloPiscadasPorMinuto;
+  }
+
+  return piscar;
+}
+
+Estado piscar(Contexto *ctx) {
+  HAL_GPIO_TogglePin(LD2_GPIO_Port, LD2_Pin);
+  HAL_Delay((1/(ctx->freqPiscadasPorMinuto/60))/2);
+  HAL_GPIO_TogglePin(LD2_GPIO_Port, LD2_Pin);
+  HAL_Delay((1/(ctx->freqPiscadasPorMinuto/60))/2);
+}
 
 /* USER CODE END 4 */
 
